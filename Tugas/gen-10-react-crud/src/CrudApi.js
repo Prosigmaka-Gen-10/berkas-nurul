@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import Spinner from "./Spinner";
 
 export default function CrudApi() {
   const originalForm = {
@@ -10,12 +11,23 @@ export default function CrudApi() {
 
   const [books, setBooks] = useState([]);
   const [formInput, setFormInput] = useState({ ...originalForm });
+  const [isLoading, setIsLoading] = useState(true);
 
-  function getBookList() {
-    axios.get("http://localhost:3000/books").then((res) => {
-      // console.log(res.data)
-      setBooks(res.data);
-    });
+  async function getBookList() {
+    try {
+      setIsLoading(true);
+      const response = await axios.get("http://localhost:3000/books");
+
+      console.log(response.data);
+      setBooks(response.data);
+
+      console.log("Saya hasrunya diakhir jalannya");
+    } catch (err) {
+      console.log(err);
+      alert("Terjadi masalah saat memproses data");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function createBookData() {
@@ -36,22 +48,36 @@ export default function CrudApi() {
     setFormInput({ ...originalForm });
   }
 
-  useEffect(() => {
-    getBookList();
-  });
-
   function updateBook() {
+    setIsLoading(true);
     axios
       .put("http://localhost:3000/books/" + formInput.id, formInput)
       .then(() => {
         getBookList();
+      })
+      .catch((err) => {
+        console.log(err);
+        alert("Ada masalah saat memproses data");
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }
 
   function deleteBook(bookId) {
-    axios.delete("http://localhost:3000/books/" + bookId).then(() => {
-      getBookList();
-    });
+    setIsLoading(true);
+    axios
+      .delete("http://localhost:3000/books/" + bookId)
+      .then(() => {
+        getBookList();
+      })
+      .catch((err) => {
+        console.log(err);
+        alert("Ada masalah saat memproses data");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }
 
   function handleInput(event, propName) {
@@ -66,7 +92,9 @@ export default function CrudApi() {
 
   useEffect(() => {
     getBookList();
-  });
+  }, []);
+
+  if (isLoading) return <Spinner />;
 
   return (
     <>
